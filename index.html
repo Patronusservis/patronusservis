@@ -1,0 +1,1746 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Patronus servis</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    :root{
+      --bg:#08111f;
+      --bg2:#0f172a;
+      --hero1:#08111f;
+      --hero2:#163a83;
+      --hero3:#1597d7;
+      --panel:#ffffff;
+      --panel-soft:#f8fbff;
+      --text:#0f172a;
+      --muted:#64748b;
+      --line:#dbe4f0;
+      --primary:#0f4fd6;
+      --primary2:#0ea5e9;
+      --success:#059669;
+      --warning:#d97706;
+      --danger:#dc2626;
+      --shadow:0 18px 52px rgba(2,6,23,.12);
+      --radius:24px;
+    }
+    *{box-sizing:border-box}
+    html,body{margin:0;padding:0}
+    body{
+      font-family:Inter,ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+      color:var(--text);
+      min-height:100vh;
+      background:
+        linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.01)),
+        radial-gradient(circle at top left, rgba(14,165,233,.10), transparent 22%),
+        radial-gradient(circle at right top, rgba(15,79,214,.10), transparent 24%),
+        linear-gradient(180deg,#0b1220 0%, #111827 28%, #172033 100%);
+      background-attachment: fixed;
+    }
+    .hidden{display:none !important}
+    .hero{
+      position:relative;overflow:hidden;color:#fff;
+      background:linear-gradient(135deg,var(--hero1) 0%, var(--hero2) 46%, var(--hero3) 100%);
+      padding:28px 18px 76px;
+    }
+    .hero::before,.hero::after{
+      content:"";position:absolute;border-radius:999px;background:rgba(255,255,255,.08)
+    }
+    .hero::before{width:220px;height:220px;top:-70px;right:-50px}
+    .hero::after{width:150px;height:150px;left:-30px;bottom:-30px}
+    .hero-inner,.app{max-width:1260px;margin:0 auto;position:relative;z-index:1}
+    .hero-top{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap}
+    .brand{display:flex;align-items:center;gap:16px}
+    .logo{
+      width:72px;height:72px;border-radius:20px;overflow:hidden;flex:0 0 auto;
+      box-shadow:0 10px 28px rgba(0,0,0,.25);background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.14)
+    }
+    .logo img{width:100%;height:100%;object-fit:cover}
+    .brand h1{margin:0;font-size:1.8rem;line-height:1.02}
+    .brand p{margin:6px 0 0;color:rgba(255,255,255,.86);font-size:.98rem}
+    .hero-actions{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+    .chip{
+      display:inline-flex;align-items:center;gap:8px;padding:10px 14px;border-radius:999px;font-weight:700;font-size:.92rem;
+      border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.1);color:#fff
+    }
+    .app{margin-top:-44px;padding:0 14px 34px}
+    .grid{display:grid;gap:16px}
+    .grid-2{grid-template-columns:1.05fr .95fr}
+    .grid-3{grid-template-columns:repeat(3,1fr)}
+    .card{
+      background:var(--panel);border:1px solid rgba(255,255,255,.8);border-radius:var(--radius);padding:20px;box-shadow:var(--shadow)
+    }
+    .soft{background:linear-gradient(180deg,#fff,#f8fbff)}
+    .section-title{margin:0;font-size:1.18rem}
+    .section-sub{margin:6px 0 0;color:var(--muted);font-size:.95rem}
+    .toolbar,.row,.between{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+    .between{justify-content:space-between}
+    .stack{display:flex;flex-direction:column;gap:10px}
+    .field{display:flex;flex-direction:column;gap:6px}
+    .field label{font-weight:700;font-size:.9rem;color:#334155}
+    .field input,.field select,.field textarea{
+      width:100%;padding:12px 13px;border-radius:14px;border:1px solid var(--line);background:#fff;font-size:1rem;color:var(--text)
+    }
+    .field textarea{min-height:110px;resize:vertical}
+    .btn{
+      border:none;cursor:pointer;border-radius:14px;padding:12px 16px;font-weight:800;transition:.18s transform,.18s opacity,.18s background;
+    }
+    .btn:hover{transform:translateY(-1px)}
+    .btn-primary{background:linear-gradient(135deg,var(--primary),var(--primary2));color:#fff}
+    .btn-soft{background:#fff;color:#0f172a}
+    .btn-line{background:#fff;border:1px solid var(--line);color:#0f172a}
+    .btn-danger{background:var(--danger);color:#fff}
+    .btn-small{padding:9px 12px;border-radius:12px;font-size:.92rem}
+    .notice{
+      margin-top:12px;padding:13px 14px;border-radius:16px;border:1px solid #bfdbfe;background:#eff6ff;color:#1e40af;font-weight:600
+    }
+    .notice.error{background:#fef2f2;border-color:#fecaca;color:#991b1b}
+    .notice.ok{background:#ecfdf5;border-color:#a7f3d0;color:#065f46}
+    .login-shell{max-width:980px;margin:0 auto}
+    .login-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+    .login-card{min-height:100%}
+    .login-card .section-sub{margin:0 0 14px;color:var(--muted)}
+    .login-divider{margin:18px 0 12px;height:1px;background:var(--line)}
+    .login-icon{width:42px;height:42px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.1rem;font-weight:800;margin-bottom:10px}
+    .login-icon-internal{background:#dbeafe;color:#1d4ed8}
+    .login-icon-client{background:#ede9fe;color:#6d28d9}
+    .role-pick{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:16px}
+    .role-card{
+      border:1px solid var(--line);border-radius:20px;padding:16px;background:linear-gradient(180deg,#fff,#f8fbff);cursor:pointer;transition:.18s border-color,.18s transform,.18s box-shadow
+    }
+    .role-card:hover{transform:translateY(-1px);border-color:#93c5fd}
+    .role-card.active{border-color:#2563eb;box-shadow:0 0 0 3px rgba(37,99,235,.12)}
+    .role-card h3{margin:0 0 6px;font-size:1rem}
+    .role-card p{margin:0;color:var(--muted);font-size:.92rem}
+    .mini-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:16px}
+    .stat{
+      background:linear-gradient(180deg,#fff,#f8fbff);border:1px solid var(--line);border-radius:18px;padding:14px
+    }
+    .stat .label{font-size:.82rem;color:var(--muted)}
+    .stat .value{font-size:1.38rem;font-weight:800;margin-top:5px;line-height:1.1}
+    .searchbar{display:grid;grid-template-columns:1fr 180px;gap:10px;margin-top:16px}
+    .jobs{display:flex;flex-direction:column;gap:14px;margin-top:16px}
+    .job{
+      background:linear-gradient(180deg,#fff,#f8fbff);border:1px solid var(--line);border-radius:22px;padding:18px
+    }
+    .job-head{display:flex;justify-content:space-between;gap:14px;align-items:flex-start;flex-wrap:wrap}
+    .job h3{margin:0;font-size:1.12rem}
+    .job-topline{margin-top:6px;color:var(--muted);font-size:.94rem}
+    .metric-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-top:14px}
+    .metric{
+      border:1px solid var(--line);border-radius:16px;padding:12px;background:#fff
+    }
+    .metric .k{font-size:.8rem;color:var(--muted)}
+    .metric .v{margin-top:4px;font-weight:800;font-size:1.03rem}
+    .progress{width:100%;height:12px;background:#e7eef7;border-radius:999px;overflow:hidden;margin-top:14px}
+    .progress > span{display:block;height:100%;background:linear-gradient(90deg,#0ea5e9,#2563eb);border-radius:999px}
+    .pill{display:inline-flex;align-items:center;gap:7px;padding:8px 12px;border-radius:999px;font-weight:800;font-size:.85rem}
+    .pill-muted{background:#f1f5f9;color:#475569}
+    .pill-ok{background:#ecfdf5;color:#047857}
+    .pill-warn{background:#fffbeb;color:#b45309}
+    .floors{display:flex;flex-direction:column;gap:14px;margin-top:14px}
+    .floor{border:1px solid var(--line);border-radius:20px;padding:15px;background:#fff}.floor-head{cursor:pointer}.floor-body{display:none;margin-top:12px}.floor.open .floor-body{display:block}.floor-note{margin-top:8px;padding:10px 12px;border-radius:14px;background:#f8fafc;border:1px dashed var(--line);color:#475569;font-size:.92rem}.room-label{font-weight:800}.room-note{margin-top:8px;padding-top:8px;border-top:1px dashed var(--line);font-size:.88rem;color:#64748b}
+    .room-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(245px,1fr));gap:12px;margin-top:12px}
+    .room{
+      border:1px solid var(--line);border-radius:18px;padding:14px;background:linear-gradient(180deg,#fff,#f8fafc);cursor:pointer;transition:.18s border-color,.18s transform
+    }
+    .room:hover{border-color:#93c5fd;transform:translateY(-1px)}
+    .room h4{margin:0 0 8px;font-size:1rem}
+    .small{font-size:.88rem;color:var(--muted)}
+    .badge{display:inline-block;border-radius:999px;padding:5px 9px;font-size:.78rem;font-weight:800}
+    .badge-done{background:#dcfce7;color:#166534}
+    .badge-part{background:#fef3c7;color:#92400e}
+    .badge-todo{background:#e2e8f0;color:#475569}
+    .detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+    .checklist{display:flex;flex-direction:column;gap:10px;margin-top:14px}
+    .check{display:flex;gap:12px;align-items:flex-start;padding:12px;border:1px solid var(--line);border-radius:16px;background:#fff}
+    .check input{margin-top:3px;transform:scale(1.18)}
+    .footer{text-align:center;color:#cbd5e1;font-size:.9rem;padding:16px 0 6px}
+    @media (max-width:1080px){
+      .grid-2,.detail-grid{grid-template-columns:1fr}
+      .metric-grid{grid-template-columns:repeat(3,1fr)}
+    }
+    @media (max-width:820px){
+      .mini-stats{grid-template-columns:repeat(2,1fr)}
+      .metric-grid{grid-template-columns:repeat(2,1fr)}
+      .searchbar{grid-template-columns:1fr}
+    }
+    @media (max-width:620px){
+      .hero{padding:22px 14px 72px}
+      .brand h1{font-size:1.48rem}
+      .app{padding:0 10px 28px}
+      .card{padding:16px}
+      .role-pick,.metric-grid,.mini-stats{grid-template-columns:1fr}
+      .job-head{align-items:flex-start}
+    }
+  
+    
+    .upload-toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:end;margin-top:16px}
+    .upload-list{
+      display:block;
+      margin-top:12px;
+      height:96px;
+      max-height:96px;
+      min-height:96px;
+      overflow-y:auto;
+      overflow-x:hidden;
+      padding-right:2px;
+      width:100%;
+      border:1px solid var(--line);
+      border-radius:12px;
+      background:rgba(255,255,255,.7);
+      -webkit-overflow-scrolling:touch;
+      overscroll-behavior:contain;
+    }
+    .upload-card{
+      display:grid;
+      grid-template-columns:40px minmax(0,1fr) auto;
+      align-items:center;
+      gap:6px;
+      border-bottom:1px solid #e2e8f0;
+      padding:6px 7px;
+      background:transparent;
+      width:100%;
+      min-width:0;
+      overflow:hidden;
+    }
+    .upload-card:last-child{border-bottom:none}
+    .upload-thumb{
+      width:34px;
+      height:26px;
+      object-fit:cover;
+      border-radius:6px;
+      border:1px solid var(--line);
+      background:#f8fafc
+    }
+    .upload-file{
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      width:34px;
+      height:26px;
+      font-weight:800;
+      color:#475569;
+      background:#f8fafc;
+      border-radius:6px;
+      border:1px dashed var(--line);
+      font-size:.66rem
+    }
+    .upload-thumb-btn{display:block;border:none;background:none;padding:0;width:34px;height:26px;cursor:pointer}
+    .upload-main{min-width:0;overflow:hidden}
+    .upload-name{
+      font-weight:700;
+      font-size:.72rem;
+      line-height:1.2;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+      margin:0;
+      color:#0f172a;
+    }
+    .upload-meta{font-size:.64rem;color:var(--muted);margin-top:1px;white-space:nowrap}
+    .upload-actions{display:flex;gap:4px;align-items:center;flex-shrink:0}
+    .upload-card .btn-small{padding:4px 6px;border-radius:8px;font-size:.68rem}
+
+
+    .preview-modal{position:fixed;inset:0;background:rgba(15,23,42,.82);display:flex;align-items:center;justify-content:center;padding:24px;z-index:2000}
+    .preview-modal.hidden{display:none !important}
+    .preview-dialog{width:min(1100px,100%);max-height:92vh;background:#0b1220;border:1px solid rgba(255,255,255,.12);border-radius:20px;overflow:hidden;box-shadow:0 24px 80px rgba(0,0,0,.45)}
+    .preview-head{display:flex;justify-content:space-between;gap:12px;align-items:center;padding:14px 16px;color:#fff;background:rgba(255,255,255,.04)}
+    .preview-title{font-weight:800;word-break:break-word}
+    .preview-body{padding:14px;background:#111827;max-height:calc(92vh - 64px);overflow:auto;display:flex;align-items:center;justify-content:center}
+    .preview-body img{max-width:min(100%,980px);max-height:78vh;border-radius:14px;background:#fff}
+    .preview-body iframe{width:100%;height:78vh;border:none;border-radius:14px;background:#fff}
+
+    .floors{display:flex;flex-direction:column;gap:16px}
+    .floor{border:2px solid #1d4ed8;background:linear-gradient(180deg,#dbeafe 0%,#eff6ff 100%);border-radius:18px;padding:14px;box-shadow:0 10px 24px rgba(29,78,216,.10)}
+    .floor-head{cursor:pointer}
+    .floor .metric-grid{margin-top:12px}
+    .floor .progress{margin-top:12px;background:#93c5fd}
+    .floor-body{display:none;margin-top:14px;padding-top:14px;border-top:1px solid #93c5fd}
+    .floor.open .floor-body{display:block}
+    .room-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px}
+    .room{border:2px solid #0f766e;border-radius:16px;padding:12px;background:linear-gradient(180deg,#ecfeff 0%,#f0fdfa 100%);box-shadow:0 6px 16px rgba(15,118,110,.08)}
+    .room-label{font-weight:800;color:#0f172a}
+    .room-note{margin-top:8px;padding:8px 10px;border-radius:10px;background:#fff7ed;border:1px solid #f97316;color:#9a3412;font-size:.9rem}
+    #roomFormStatus{margin:14px 0 0}
+
+    .access-wrap{margin-top:16px;border-top:1px solid var(--line);padding-top:16px}
+    .access-list{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-top:14px}
+    .access-card{border:1px solid var(--line);border-radius:16px;padding:12px;background:#fff}
+    .tiny-check{display:flex;gap:8px;align-items:center;margin-top:10px;color:var(--muted);font-size:.92rem}
+
+
+    .jobs-layout{display:grid;grid-template-columns:minmax(0,1.45fr) minmax(320px,.85fr);gap:18px}
+    .dashboard-card{background:linear-gradient(180deg,#ffffff 0%,#f8fbff 100%);border:2px solid #1e40af;box-shadow:0 22px 54px rgba(2,6,23,.10)}
+    .summary-card{background:
+      radial-gradient(circle at top right, rgba(8,145,178,.14), transparent 28%),
+      linear-gradient(180deg,#e0f2fe 0%,#f0f9ff 100%);
+      border-color:#7dd3fc;
+    }
+    .summary-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;flex-wrap:wrap}
+    .summary-badge{display:inline-flex;align-items:center;padding:9px 12px;border-radius:999px;background:#082f49;color:#e0f2fe;font-weight:800;font-size:.85rem}
+    .stat.accent{background:linear-gradient(135deg,#0f4fd6 0%,#0ea5e9 100%);border:none;color:#fff}
+    .stat.accent .label{color:rgba(255,255,255,.82)}
+    .stat.accent .value{color:#fff}
+    .job{position:relative;overflow:hidden;border:2px solid #7c3aed;background:linear-gradient(180deg,#f5f3ff 0%,#ffffff 100%)}
+    .job::after{content:"";position:absolute;inset:auto -40px -40px auto;width:120px;height:120px;border-radius:999px;background:rgba(14,165,233,.06)}
+    .job-head .row{justify-content:flex-end}
+    .job .metric-grid{grid-template-columns:repeat(5,minmax(0,1fr))}
+    .detail-shell{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(320px,.75fr);gap:18px;align-items:start}
+    .detail-main{display:flex;flex-direction:column;gap:16px}
+    .detail-side{display:flex;flex-direction:column;gap:16px;position:sticky;top:12px}
+    .side-card .section-sub{max-width:48ch}
+    .compact-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+    .compact-grid .stat{padding:12px}
+    .panel-title{font-size:1.05rem;font-weight:800;margin:0 0 4px}
+    @media (max-width:1080px){
+      .jobs-layout,.detail-shell{grid-template-columns:1fr}
+      .detail-side{position:static}
+    }
+    @media (max-width:760px){
+      .job .metric-grid,.compact-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+    }
+
+  </style>
+</head>
+<body>
+  <div class="hero">
+    <div class="hero-inner">
+      <div class="hero-top">
+        <div class="brand">
+          <div class="logo">
+            <img alt="Patronus servis logo" src="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEAYABgAAD/2wBDAAoHBwgHBgoICAgLCgoLDhgQDg0NDh0VFhEYIx8lJCIfIiEmKzcvJik0KSEiMEExNDk7Pj4+JS5ESUM8SDc9Pjv/2wBDAQoLCw4NDhwQEBw7KCIoOzs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozv/wAARCABDADoDASIAAhEBAxEB/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIhMUEGE1FhByJxFDKBkaEII0KxwRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/8QAHwEAAwEBAQEBAQEBAQAAAAAAAAECAwQFBgcICQoL/8QAtREAAgECBAQDBAcFBAQAAQJ3AAECAxEEBSExBhJBUQdhcRMiMoEIFEKRobHBCSMzUvAVYnLRChYkNOEl8RcYGRomJygpKjU2Nzg5OkNERUZHSElKU1RVVldYWVpjZGVmZ2hpanN0dXZ3eHl6goOEhYaHiImKkpOUlZaXmJmaoqOkpaanqKmqsrO0tba3uLm6wsPExcbHyMnK0tPU1dbX2Nna4uPk5ebn6Onq8vP09fb3+Pn6/9oADAMBAAIRAxEAPwD2aiiuW8dag1lbafFLLJBYXN2sd5NGSCseOmRyAe59BUylyq5rSpurNQXU6C+luYrKWSygS4nUfJGz7Qx+uDiuAh8b3t9d6ZJeyvpwNwolt0A2TxkkBg55+VsBl+tXYdPg8PeM9NGhXJNlqEchubbzS6IqjIk5JwM45/xqxF4Uh1KC8tb8pc2ct089sIEKG3LNk7ZD1z6AY5rKTnLY76aw9Fe/qnqnbXqnpqv63C8t4E+J9sszN5VxYu+xpG2mQHGQM4ztrFQSx6DHY6M5W4m1G4k8mKUxtdwxuQVWTscEd+gru77RbHVIIor+yguRF9wzfMR+NR3PhzSr61gguLCJBbArAYSUMPT7pGCOgpum9bEwxcEoqV9Leml7fn5epk+CLyW7k1AG6uzFCyILS9JM1s3O4En7wPGD14rrKoaVo1no8cq2qvumbfLJLIXeQ+pY8mr9aQTSszkxE4zqOUdjmfF/iKPTRbaZHfx2VzfSbDcNz9nj/if69hnufasLTNY1C40yfS59Ku9ctnuGWK9ukCwtDnhmY9QOTkV09te6f4juL20fSZJIIi0Mk88S7JGU4KjnJwc1Q0zwpb6RqUyW1xK9rO2I7cyFlhQYLjk92wPpWbUpSunodcKlKlScJR95a/P1Wq9P1LWmaFpFhDLdRWcNlZn5wnTco/icnnHcDoPr0fBqN5cYt7GN5BHwXkADY7bieF47YLeoFR65PJe6za6NC+0bRNKfxO38trN9QtbtvbxWkCwQIERBwP6n1PvWqSWx58pSk7yd2U44tVU7mktz/sncf14/lVhLiVW23MIjz0dWyp/wqS5uEtbd5pM4UdB1J7Ae5NRwwySKJLoguefLH3U9vf60yR7XcKjJYkeyk/yqQOCMg9abIfLhcoACBx9aURKFAIyQOp70AcRp3gMTzXb6qlxbXDTNILm0vSFl3MT93Hy4yBW34d0i0s9Na0ju/t8TPIfOLZLEucgkHkjABPtXMeKW8X3dxdw3EF1DpqsfJXT0DmZc/wAbA7hx7V0vgttLGkSW2kfaBb207oBcLhgThuh5xz35rCHKpWSPVxPtZUOaU73a0WqXz/TYr2yLB8RbiIjAawjaIE54yR/Q11Nc34ngezvrDxDCuTZMY7gDvC+Mn8Dg/QmuhjkSWJZEOVYZBrc8oo6gfM1PTrY/dMjysPXYvH6sD+FXZ7iK1haaZwiL1JrOvI7uXUoLm0SF3tg6NHK5XIbbg5APpThbX15eQPfRW6QwEuEjkL7m7E5A6c0ASfa5rpVEVnMqMy/O+F4yOcdelX6KKAOV8Xatqllf2VrY31pp0Usckj3N0AVJXGE56ZzSeH/HOn61fWtlFEVuJ4S8rhSFEoAygPfjJz6CtvVtEsNaW3W/gEyW8vmqrdCcEYPqOelW4rW3gRUhgjjRPuqiABfp6Vnyy5r30Oz2tD2Ki4+9rrt/w490SSNo3UMjAhlIyCPSszRoWs2ubNWLW8Em2ItyQMA4/DOPwrRkmSPIJG4DJGQKr2nzecRjLsWJByMngc/QCtDjHvFHewRygMrFdysDtZc1Ue9utP3G5Q3EKjJkQYdR6le49xVnz/syDzwY8DG4jK/mOlV9Rl87T5yqkr9nl+YHKn5fWgDRRxIiupyrDIp1V7Ft2n27esSn9BVigApG+6fpRRQBVt9Ns4MukC7nO5mbLEn1yatDpRRQAHng1zPi6CPTtGuLyyBt5mG1jGxUMD1yvQ/iKKKAN+wULp9so6CJQPyFWKKKAP/Z" />
+          </div>
+          <div>
+            <h1>Patronus servis</h1>
+            <p>Ostrý firemní přehled zakázek, metráží, pater a místností.</p>
+          </div>
+        </div>
+        <div class="hero-actions">
+          <div class="chip hidden" id="roleChip"></div>
+          <button class="btn btn-soft hidden" id="logoutBtn">Odhlásit</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="app">
+    <section id="loginView">
+      <div class="login-shell">
+        <div class="login-grid">
+          <div class="card soft login-card">
+            <div class="login-icon login-icon-internal">PS</div>
+            <h2 class="section-title">Interní přihlášení</h2>
+            <p class="section-sub">Pro správu a vedení firmy.</p>
+
+            <div class="field">
+              <label>E-mail</label>
+              <input id="loginEmail" type="email" placeholder="např. r.rosko@patronusservis.cz" autocomplete="username" />
+            </div>
+            <div class="field">
+              <label>Heslo</label>
+              <input id="loginPassword" type="password" placeholder="Heslo" autocomplete="current-password" />
+            </div>
+
+            <label class="tiny-check"><input id="rememberLogin" type="checkbox"> Pamatovat přihlášení na tomto zařízení</label>
+
+            <div class="row" style="margin-top:14px">
+              <button class="btn btn-primary" id="loginBtn" style="flex:1">Přihlásit heslem</button>
+            </div>
+          </div>
+
+          <div class="card soft login-card">
+            <div class="login-icon login-icon-client">OTP</div>
+            <h2 class="section-title">Přístup pro klienta / stavbyvedoucího</h2>
+            <p class="section-sub">Zadej e-mail, na který jsi dostal přístup k zakázce. Pak si nech poslat kód a přihlaste se jen ke svému objektu.</p>
+
+            <div class="field">
+              <label>E-mail pro zaslání kódu</label>
+              <input id="otpEmail" type="email" placeholder="např. klient@firma.cz" autocomplete="email" />
+            </div>
+
+            <div class="row" style="margin-top:8px">
+              <button class="btn btn-line" id="sendOtpBtn" type="button" style="flex:1">Poslat kód na e-mail</button>
+            </div>
+
+            <div class="login-divider"></div>
+
+            <div class="field">
+              <label>Ověřovací kód</label>
+              <input id="otpCode" type="text" inputmode="numeric" placeholder="8místný kód z e-mailu" maxlength="8" />
+            </div>
+
+            <div class="row" style="margin-top:10px">
+              <button class="btn btn-primary" id="verifyOtpBtn" style="width:100%" type="button">Přihlásit kódem</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="notice" id="loginStatus" style="margin-top:14px">Spouštím aplikaci…</div>
+      </div>
+    </section>
+
+    <section id="jobsView" class="hidden">
+      <div class="jobs-layout">
+        <div class="card dashboard-card">
+          <div class="between">
+            <div>
+              <h2 class="section-title">Přehled zakázek</h2>
+              
+            </div>
+            <div class="row">
+              <button class="btn btn-line btn-small" id="refreshJobsBtn">Obnovit</button>
+              <button class="btn btn-danger btn-small hidden" id="wipeJobsBtn">Smazat všechny zakázky</button>
+            </div>
+          </div>
+
+          <div class="toolbar hidden" id="spravaAddJob" style="margin-top:14px">
+            <div class="field" style="flex:1;min-width:240px">
+              <label>Nová zakázka</label>
+              <input id="newJobName" placeholder="např. Bytový dům – Havířov" />
+            </div>
+            <button class="btn btn-primary" id="addJobBtn">Přidat zakázku</button>
+          </div>
+
+          <div class="searchbar">
+            <div class="field" style="margin:0">
+              <label>Hledat zakázku</label>
+              <input id="jobSearch" placeholder="napiš název stavby" />
+            </div>
+            <div class="field" style="margin:0">
+              <label>Řazení</label>
+              <select id="jobSort">
+                <option value="newest">Nejnovější</option>
+                <option value="name">Název A–Z</option>
+                <option value="progress">Nejvíc hotovo</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="jobs" id="jobsList"></div>
+        </div>
+
+        <div class="card dashboard-card summary-card">
+          <div class="summary-head"><div><h2 class="section-title">Souhrn systému</h2><p class="section-sub">Rychlý celkový přehled pro vedení, kancelář i kontrolu stavby.</p></div><div class="summary-badge">Firemní dashboard</div></div>
+          
+          <div class="mini-stats">
+            <div class="stat accent"><div class="label">Zakázky</div><div class="value" id="sumJobs">0</div></div>
+            <div class="stat"><div class="label">Pokoje</div><div class="value" id="sumRoomsArea">0 m²</div></div>
+            <div class="stat"><div class="label">Sociální</div><div class="value" id="sumSocialArea">0 m²</div></div>
+            <div class="stat"><div class="label">Chodby</div><div class="value" id="sumCorridorArea">0 m²</div></div>
+            <div class="stat"><div class="label">Zárubně</div><div class="value" id="sumFrames">0</div></div>
+            <div class="stat"><div class="label">Patra</div><div class="value" id="sumFloors">0</div></div>
+            <div class="stat"><div class="label">Celkem</div><div class="value" id="sumTotal">0 m²</div></div>
+            <div class="stat accent"><div class="label">Hotovo</div><div class="value" id="sumDone">0 m²</div></div>
+          </div>
+          <div class="notice ok hidden" id="jobsStatus">Připraveno.</div>
+        </div>
+      </div>
+    </section>
+
+    <section id="detailView" class="hidden">
+      <div class="between" style="margin-bottom:12px">
+        <button class="btn btn-line" id="backBtn">← Zpět na zakázky</button>
+        <div class="chip" id="detailRoleChip"></div>
+      </div>
+
+      <div class="detail-shell">
+        <div class="detail-main">
+          <div class="grid grid-2">
+            <div class="card dashboard-card">
+              <h2 class="section-title" id="detailJobTitle">Zakázka</h2>
+              <p class="section-sub">Přehled metráže, členění prostoru a postupu prací.</p>
+              <div class="mini-stats">
+                <div class="stat"><div class="label">Patra</div><div class="value" id="detailFloorsCount">0</div></div>
+                <div class="stat"><div class="label">Položky</div><div class="value" id="detailRoomsCount">0</div></div>
+                <div class="stat accent"><div class="label">Celkem</div><div class="value" id="detailTotal">0 m²</div></div>
+                <div class="stat accent"><div class="label">Hotovo</div><div class="value" id="detailDone">0 m²</div></div>
+              </div>
+              <div class="metric-grid">
+                <div class="metric"><div class="k">Pokoje</div><div class="v" id="detailRoomsArea">0 m²</div></div>
+                <div class="metric"><div class="k">Sociální</div><div class="v" id="detailSocialArea">0 m²</div></div>
+                <div class="metric"><div class="k">Chodby</div><div class="v" id="detailCorridorArea">0 m²</div></div>
+                <div class="metric"><div class="k">Zárubně</div><div class="v" id="detailFrames">0</div></div>
+                <div class="metric"><div class="k">Hotovo</div><div class="v" id="detailPercent">0 %</div></div>
+              </div>
+
+              <div class="toolbar hidden" id="spravaAddFloor" style="margin-top:16px">
+                <div class="field" style="min-width:220px;flex:1;margin:0">
+                  <label>Nové patro</label>
+                  <input id="newFloorName" placeholder="např. 1. patro" />
+                </div>
+                <button class="btn btn-primary" id="addFloorBtn">Přidat patro</button>
+                <button class="btn btn-danger" id="deleteJobBtn">Smazat zakázku</button>
+              </div>
+            </div>
+
+            <div class="card soft hidden dashboard-card" id="addRoomPanel">
+              <h2 class="section-title">Přidat pokoj</h2>
+              <p class="section-sub">Nová místnost, chodba nebo sociální zařízení do vybraného patra.</p>
+              <div class="grid" style="grid-template-columns:repeat(2,1fr);margin-top:16px">
+                <div class="field"><label>Patro</label><select id="roomFloorSelect"></select></div>
+                <div class="field"><label>Info k pokoji</label><input id="roomName" placeholder="např. opravit kolem okna, špatný roh u dveří, latex i na strop..." /></div>
+                <div class="field"><label>Kategorie</label>
+                  <select id="roomCategory">
+                    <option value="pokoj">Pokoj</option>
+                    <option value="socialni">Sociální zařízení</option>
+                    <option value="chodba">Chodba</option>
+                    <option value="ostatni">Ostatní</option>
+                  </select>
+                </div>
+                <div class="field"><label>Počet zárubní</label><input id="roomFrames" type="number" min="0" step="1" value="0" /></div>
+                <div class="field"><label>Délka</label><input id="roomLength" type="number" step="0.01" placeholder="5" /></div>
+                <div class="field"><label>Šířka</label><input id="roomWidth" type="number" step="0.01" placeholder="3" /></div>
+                <div class="field"><label>Výška</label><input id="roomHeight" type="number" step="0.01" placeholder="2.7" /></div>
+                <div class="field"><label>Strop</label><select id="roomCeiling"><option value="true">Ano</option><option value="false">Ne</option></select></div>
+                <div class="field"><label>Počet stejných místností</label>
+                  <div class="row">
+                    <button class="btn btn-line btn-small" id="qtyMinus" type="button">−</button>
+                    <input id="roomQty" type="number" min="1" step="1" value="1" style="max-width:86px;text-align:center" />
+                    <button class="btn btn-line btn-small" id="qtyPlus" type="button">+</button>
+                  </div>
+                </div>
+              </div>
+              <div class="row" style="margin-top:14px">
+                <button class="btn btn-primary" id="addRoomBtn">Přidat pokoj</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="notice hidden" id="roomFormStatus"></div><div class="floors" id="floorsWrap"></div>
+        </div>
+
+        <div class="detail-side">
+          <div class="card dashboard-card side-card">
+            <div class="between">
+              <div>
+                <h2 class="section-title">Podklady k zakázce</h2>
+                <p class="section-sub">Fotky, půdorysy, PDF a další podklady k této zakázce.</p>
+              </div>
+            </div>
+            <div class="upload-toolbar">
+              <div class="field" style="margin:0;min-width:220px;flex:1">
+                <label>Import dat</label>
+                <input id="jobFileInput" type="file" />
+              </div>
+              <button class="btn btn-primary hidden" id="uploadJobFileBtn">Nahrát soubor</button>
+            </div>
+            <div class="notice hidden" id="uploadStatus"></div>
+            <div class="upload-list" id="jobUploadsList"></div>
+
+            <div class="access-wrap hidden" id="jobAccessPanel">
+              <div class="between">
+                <div>
+                  <h3 style="margin:0">Přístupy k zakázce</h3>
+                  <div class="section-sub">Přidej klienta nebo stavbyvedoucího, který uvidí jen tuto zakázku.</div>
+                </div>
+              </div>
+              <div class="upload-toolbar">
+                <div class="field" style="margin:0;min-width:220px;flex:1">
+                  <label>E-mail uživatele</label>
+                  <input id="jobAccessEmail" type="email" placeholder="e-mail klienta / stavbyvedoucího" />
+                </div>
+                <button class="btn btn-primary hidden" id="addJobAccessBtn">Přidat přístup k zakázce</button>
+              </div>
+              <div class="notice hidden" id="jobAccessStatus"></div>
+              <div class="access-list" id="jobAccessList"></div>
+            </div>
+          </div>
+
+          <div class="card dashboard-card side-card">
+            <div class="between">
+              <div>
+                <h2 class="section-title">Barvy a materiál</h2>
+                <p class="section-sub">Přehled všeho, co bylo na zakázku dovezeno a kde se to používá.</p>
+              </div>
+              <div class="pill pill-muted" id="materialsSummary">0 položek</div>
+            </div>
+
+            <div class="grid hidden" id="jobMaterialsForm" style="grid-template-columns:1fr; margin-top:16px">
+              <div class="field"><label>Název barvy / materiálu</label><input id="materialName" placeholder="např. Latex, Primalex Plus, penetrace" /></div>
+              <div class="compact-grid">
+                <div class="field"><label>Použití</label>
+                  <select id="materialUse">
+                    <option value="steny">Stěny</option>
+                    <option value="stropy">Stropy</option>
+                    <option value="steny_a_stropy">Stěny i stropy</option>
+                    <option value="socialni">Sociální zařízení</option>
+                    <option value="chodby">Chodby</option>
+                    <option value="univerzalni">Univerzální</option>
+                  </select>
+                </div>
+                <div class="field"><label>Množství</label><input id="materialQty" type="number" step="0.01" min="0" placeholder="např. 25" /></div>
+                <div class="field"><label>Jednotka</label>
+                  <select id="materialUnit">
+                    <option value="kg">kg</option>
+                    <option value="l">l</option>
+                    <option value="ks">ks</option>
+                    <option value="bal">bal</option>
+                  </select>
+                </div>
+                <div class="field"><label>Odstín / specifikace</label><input id="materialShade" placeholder="např. bílá, RAL 9010" /></div>
+              </div>
+              <div class="field"><label>Poznámka k materiálu</label><input id="materialNote" placeholder="např. latex i na strop 2. patro" /></div>
+              <div class="row">
+                <button class="btn btn-primary" id="addMaterialBtn" type="button">Přidat materiál</button>
+              </div>
+            </div>
+
+            <div class="notice hidden" id="materialsStatus"></div>
+            <div class="access-list" id="materialsList" style="margin-top:16px"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="roomDetailView" class="hidden">
+      <div class="between" style="margin-bottom:12px">
+        <button class="btn btn-line" id="backToJobBtn">← Zpět na zakázku</button>
+        <div class="pill pill-muted" id="roomStatePill">Nezačato</div>
+      </div>
+
+      <div class="detail-grid">
+        <div class="card">
+          <h2 class="section-title" id="roomTitle">Pokoj</h2>
+          <p class="section-sub" id="roomMeta"></p>
+          <div class="mini-stats">
+            <div class="stat"><div class="label">Metráž</div><div class="value" id="roomArea">0 m²</div></div>
+            <div class="stat"><div class="label">Kategorie</div><div class="value" id="roomCategoryLabel">—</div></div>
+            <div class="stat"><div class="label">Zárubně</div><div class="value" id="roomFramesLabel">0</div></div>
+            <div class="stat"><div class="label">Strop</div><div class="value" id="roomCeilingLabel">Ne</div></div>
+          </div>
+          <div class="metric-grid" style="margin-top:14px">
+            <div class="metric"><div class="k">Délka</div><div class="v" id="roomLen">0</div></div>
+            <div class="metric"><div class="k">Šířka</div><div class="v" id="roomWid">0</div></div>
+            <div class="metric"><div class="k">Výška</div><div class="v" id="roomHei">0</div></div>
+            <div class="metric"><div class="k">Hotovo</div><div class="v" id="roomProgressPercent">0 %</div></div>
+            <div class="metric"><div class="k">Stav</div><div class="v" id="roomStateText">Nezačato</div></div>
+          </div>
+          <div class="floor-note" id="roomNoteBox">Bez info k pokoji.</div>
+          <div class="row hidden" id="roomEditButtons" style="margin-top:14px">
+            <button class="btn btn-primary" id="markRoomDoneBtn">Přepnout hotovo</button>
+            <button class="btn btn-danger" id="deleteRoomBtn">Smazat pokoj</button>
+          </div>
+        </div>
+
+        <div class="card soft">
+          <h2 class="section-title">Checklist</h2>
+          
+          <div class="checklist" id="checklistWrap"></div>
+        </div>
+      </div>
+    </section>
+
+    <div class="footer">Patronus servis • ostrý provoz</div>
+  </div>
+
+
+  <div class="preview-modal hidden" id="previewModal">
+    <div class="preview-dialog">
+      <div class="preview-head">
+        <div class="preview-title" id="previewTitle">Náhled</div>
+        <div class="row">
+          <a class="btn btn-soft btn-small" id="previewOpenLink" href="#" target="_blank" rel="noopener">Otevřít</a>
+          <button class="btn btn-line btn-small" id="previewCloseBtn" type="button">Zavřít</button>
+        </div>
+      </div>
+      <div class="preview-body" id="previewBody"></div>
+    </div>
+  </div>
+
+<script>
+window.addEventListener("error", function(e){
+  try{
+    const box = document.querySelector("#loginStatus");
+    if(box){
+      box.textContent = "JavaScript chyba: " + (e.message || "neznámá chyba");
+      box.className = "notice error";
+    }
+  }catch(_){ }
+});
+
+const SUPABASE_URL = "https://gelvfowpdcumrrdsivzy.supabase.co";
+const SUPABASE_ANON_KEY = "sb_publishable_fwmdv6LWPNzfcEa4gusnVQ_3l80nxXC";
+const DEFAULT_CHECKLIST = ["Zakrytí a příprava","Opravy","Penetrace","1. vrstva","2. vrstva","Úklid a dokončení"];
+
+let sbClient = null;
+let currentSession = null;
+let currentProfile = null;
+let currentJobs = [];
+let currentJobDetail = null;
+let currentRoomDetail = null;
+let expandedFloorIds = new Set();
+let addRoomBusy = false;
+let schemaHasExtendedRoomFields = true;
+let currentAccessibleJobIds = null;
+let schemaHasMaterials = true;
+
+const $ = (s)=>document.querySelector(s);
+const $$ = (s)=>Array.from(document.querySelectorAll(s));
+const num = (v)=>Number(String(v ?? 0).replace(',', '.')) || 0;
+
+function setRoomFormStatus(msg, kind="info"){
+  const el = $("#roomFormStatus");
+  if(!el) return;
+  if(!msg){
+    el.textContent = "";
+    el.className = "notice hidden";
+    return;
+  }
+  el.textContent = msg;
+  el.className = "notice" + (kind === "error" ? " error" : kind === "ok" ? " ok" : "");
+}
+function getAutoRoomBaseName(kategorie){
+  const map = {
+    pokoj: "Pokoj",
+    chodba: "Chodba",
+    socialni: "Sociální zařízení",
+    technicka: "Technická místnost",
+    kancelar: "Kancelář",
+    spolecne: "Společný prostor"
+  };
+  return map[kategorie] || "Pokoj";
+}
+function getNextRoomNumberForFloor(patroId, kategorie){
+  const floor = (currentJobDetail?.patra || []).find(f => String(f.id) === String(patroId));
+  if(!floor) return 1;
+  const base = getAutoRoomBaseName(kategorie);
+  let maxNum = 0;
+  for(const room of (floor.mistnosti || []).map(normalizeRoom)){
+    const roomCat = room.kategorie || "";
+    if(roomCat && roomCat !== kategorie) continue;
+    const n = String(room.nazev || "").match(/(\d+)\s*$/);
+    if(n) maxNum = Math.max(maxNum, Number(n[1]));
+    else if(String(room.nazev || "").trim().startsWith(base)) maxNum = Math.max(maxNum, 1);
+  }
+  return maxNum + 1;
+}
+
+const fmt = (n)=>`${Number(n || 0).toFixed(1).replace('.', ',')} m²`;
+const fmtInt = (n)=>String(parseInt(n || 0, 10));
+
+function safeText(v){ return String(v || "").trim(); }
+function fileKind(name){
+  const n = (name || "").toLowerCase();
+  if(/\.(png|jpg|jpeg|webp|gif|bmp|svg)$/.test(n)) return "image";
+  if(/\.pdf$/.test(n)) return "pdf";
+  return "file";
+}
+function formatBytes(bytes){
+  const b = Number(bytes || 0);
+  if(b < 1024) return `${b} B`;
+  if(b < 1024 * 1024) return `${(b/1024).toFixed(1).replace(".", ",")} KB`;
+  return `${(b/(1024*1024)).toFixed(1).replace(".", ",")} MB`;
+}
+
+async function getFileAccessUrl(path){
+  const signed = await sbClient.storage.from("zakazky").createSignedUrl(path, 60 * 60 * 24 * 7);
+  if(!signed.error && signed.data?.signedUrl) return signed.data.signedUrl;
+  return sbClient.storage.from("zakazky").getPublicUrl(path).data.publicUrl;
+}
+function openPreviewModal(url, name, kind){
+  const modal = $("#previewModal");
+  const body = $("#previewBody");
+  const title = $("#previewTitle");
+  const openLink = $("#previewOpenLink");
+  if(!modal || !body || !title || !openLink) return;
+  title.textContent = name || "Náhled";
+  openLink.href = url;
+  if(kind === "image") body.innerHTML = `<img src="${url}" alt="${name || ''}">`;
+  else if(kind === "pdf") body.innerHTML = `<iframe src="${url}" title="${name || ''}"></iframe>`;
+  else body.innerHTML = `<div style="color:#fff;text-align:center"><div style="font-weight:800;margin-bottom:8px">Soubor nelze zobrazit přímo.</div><a class="btn btn-soft" href="${url}" target="_blank" rel="noopener">Otevřít soubor</a></div>`;
+  modal.classList.remove("hidden");
+}
+function closePreviewModal(){
+  const modal = $("#previewModal");
+  const body = $("#previewBody");
+  if(modal) modal.classList.add("hidden");
+  if(body) body.innerHTML = "";
+}
+function setUploadStatus(msg="", kind="info"){
+  const el = $("#uploadStatus");
+  if(!el) return;
+  if(!msg){
+    el.textContent = "";
+    el.className = "notice hidden";
+    return;
+  }
+  el.textContent = msg;
+  el.className = "notice" + (kind === "error" ? " error" : kind === "ok" ? " ok" : "");
+}
+
+function setAccessStatus(msg="", kind="info"){
+  const el = $("#jobAccessStatus");
+  if(!el) return;
+  if(!msg){ el.textContent = ""; el.className = "notice hidden"; return; }
+  el.textContent = msg;
+  el.className = "notice" + (kind === "error" ? " error" : kind === "ok" ? " ok" : "");
+}
+function setMaterialsStatus(msg="", kind="info"){
+  const el = $("#materialsStatus");
+  if(!el) return;
+  if(!msg){ el.textContent = ""; el.className = "notice hidden"; return; }
+  el.textContent = msg;
+  el.className = "notice" + (kind === "error" ? " error" : kind === "ok" ? " ok" : "");
+}
+function canSeeAllJobs(){
+  return ["sprava","sefka"].includes(currentProfile?.role || "");
+}
+function canEditData(){
+  return (currentProfile?.role || "") === "sprava";
+}
+function canManageFiles(){
+  return ["sprava","sefka"].includes(currentProfile?.role || "");
+}
+async function loadAccessibleJobIds(){
+  if(canSeeAllJobs()) return null;
+  try{
+    let data = null;
+    let error = null;
+    let res = await sbClient.from("objekt_pristupy").select("objekt_id").eq("user_id", currentProfile.id);
+    data = res.data; error = res.error;
+    if(error && /column .*email/i.test(error.message || "")) error = null;
+    const email = (currentProfile?.email || "").toLowerCase();
+    if(email){
+      const byEmail = await sbClient.from("objekt_pristupy").select("objekt_id").eq("email", email);
+      if(!byEmail.error){
+        data = [...(data || []), ...(byEmail.data || [])];
+      }
+    }
+    if(error) throw error;
+    return [...new Set((data || []).map(x => x.objekt_id))];
+  }catch(e){
+    setJobsStatus("Přístupy k zakázkám nejsou připravené: " + (e.message || e), "error");
+    return [];
+  }
+}
+
+function setLoginStatus(msg, kind="info"){
+  const el = $("#loginStatus");
+  if(!el) return;
+  el.textContent = msg;
+  el.className = "notice" + (kind === "error" ? " error" : kind === "ok" ? " ok" : "");
+}
+function setJobsStatus(msg, kind="info"){
+  const el = $("#jobsStatus");
+  if(!el) return;
+  el.textContent = msg;
+  el.className = "notice" + (kind === "error" ? " error" : kind === "ok" ? " ok" : "");
+}
+function assertConfig(){
+  if(!SUPABASE_URL.startsWith("http") || !SUPABASE_ANON_KEY){
+    setLoginStatus("Chybí SUPABASE_URL nebo publishable key.", "error");
+    return false;
+  }
+  return true;
+}
+function initSupabase(){
+  if(!assertConfig()) return false;
+  try{
+    sbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    return true;
+  }catch(e){
+    setLoginStatus("Nepodařilo se spustit Supabase klient: " + (e?.message || e), "error");
+    return false;
+  }
+}
+function show(view){
+  ["loginView","jobsView","detailView","roomDetailView"].forEach(id => $("#"+id)?.classList.add("hidden"));
+  $("#"+view)?.classList.remove("hidden");
+}
+function categoryLabel(v){
+  const x = (v || "ostatni").toLowerCase();
+  if(x === "pokoj") return "Pokoj";
+  if(x === "socialni") return "Sociální";
+  if(x === "chodba") return "Chodba";
+  return "Ostatní";
+}
+function normalizeRoom(r){
+  return {
+    ...r,
+    kategorie: r?.kategorie || inferCategoryFromName(r?.nazev || ""),
+    nazev: r?.nazev || "",
+    popis: r?.popis || "",
+    pocet_zarubni: Number(r?.pocet_zarubni || 0),
+    checklist: Array.isArray(r?.checklist) ? r.checklist : []
+  };
+}
+function inferCategoryFromName(name){
+  const n = (name || "").toLowerCase();
+  if(n.includes("wc") || n.includes("koup") || n.includes("soci")) return "socialni";
+  if(n.includes("chodba") || n.includes("hala") || n.includes("koridor")) return "chodba";
+  if(n.includes("pokoj") || n.includes("třída") || n.includes("trida") || n.includes("kancel") || n.includes("sborovna")) return "pokoj";
+  return "ostatni";
+}
+function area(room){
+  const walls = (2 * (num(room.delka) + num(room.sirka))) * num(room.vyska);
+  const ceiling = room.strop ? (num(room.delka) * num(room.sirka)) : 0;
+  return Math.max(0, walls + ceiling);
+}
+function progressFromChecks(checks){
+  if(!checks?.length) return 0;
+  const done = checks.filter(x => x.hotovo).length;
+  return done / checks.length;
+}
+function stateFromRoom(room){
+  const p = progressFromChecks(room.checklist || []);
+  if(room.hotovo || p === 1) return { text:"Hotovo", cls:"badge-done", pill:"pill-ok" };
+  if(p > 0) return { text:"Rozpracováno", cls:"badge-part", pill:"pill-warn" };
+  return { text:"Nezačato", cls:"badge-todo", pill:"pill-muted" };
+}
+function aggregateRooms(rooms){
+  let total = 0, done = 0, roomArea = 0, socialArea = 0, corridorArea = 0, frames = 0;
+  for(const rr of (rooms || [])){
+    const r = normalizeRoom(rr);
+    const a = area(r);
+    total += a;
+    frames += Number(r.pocet_zarubni || 0);
+    if(r.kategorie === "pokoj") roomArea += a;
+    else if(r.kategorie === "socialni") socialArea += a;
+    else if(r.kategorie === "chodba") corridorArea += a;
+    if(r.hotovo || progressFromChecks(r.checklist || []) === 1) done += a;
+  }
+  return { total, done, roomArea, socialArea, corridorArea, frames };
+}
+
+async function loadJobUploads(){
+  const box = $("#jobUploadsList");
+  if(!box) return;
+  box.innerHTML = "";
+  setUploadStatus("");
+  if(!currentJobDetail?.id || !sbClient) return;
+  const folder = String(currentJobDetail.id);
+  const { data, error } = await sbClient.storage.from("zakazky").list(folder, { limit: 100, sortBy: { column: "name", order: "desc" } });
+  if(error){
+    box.innerHTML = `<div class="upload-card" style="display:block;padding:10px"><div class="muted">Bucket &quot;zakazky&quot; ještě není připravený nebo k němu není přístup.</div></div>`;
+    setUploadStatus('Zkontroluj bucket "zakazky" a Storage policy v Supabase.', "error");
+    return;
+  }
+  if(!data?.length){
+    box.innerHTML = `<div class="upload-card" style="display:block;padding:10px"><div class="muted">Zatím tu nejsou žádné nahrané podklady.</div></div>`;
+    return;
+  }
+  for(const file of data){
+    const path = `${folder}/${file.name}`;
+    const url = await getFileAccessUrl(path);
+    const kind = fileKind(file.name);
+    const card = document.createElement("div");
+    card.className = "upload-card";
+    card.innerHTML = `
+      ${kind === "image"
+        ? `<button type="button" class="upload-thumb-btn"><img class="upload-thumb" src="${url}" alt="${file.name}" onerror="this.closest('.upload-thumb-btn').outerHTML='<button type=&quot;button&quot; class=&quot;upload-file preview-file-btn&quot;>SOUBOR</button>'"></button>`
+        : `<button type="button" class="upload-file preview-file-btn">${kind === "pdf" ? "PDF" : "SOUBOR"}</button>`
+      }
+      <div class="upload-main">
+        <div class="upload-name" title="${file.name}">${file.name}</div>
+        <div class="upload-meta">${formatBytes(file.metadata?.size || file.size || 0)}</div>
+      </div>
+      <div class="upload-actions">
+        <button class="btn btn-line btn-small open-upload-btn" type="button">Otevřít</button>
+        ${canManageFiles() ? '<button class="btn btn-danger btn-small delete-upload-btn" type="button">Smazat</button>' : ''}
+      </div>
+    `;
+    const opener = ()=>openPreviewModal(url, file.name, kind);
+    card.querySelector(".open-upload-btn").onclick = opener;
+    const thumbBtn = card.querySelector(".upload-thumb-btn");
+    if(thumbBtn) thumbBtn.onclick = opener;
+    const fileBtn = card.querySelector(".preview-file-btn");
+    if(fileBtn) fileBtn.onclick = opener;
+    if(canManageFiles()){
+      card.querySelector(".delete-upload-btn").onclick = async ()=>{
+        if(!confirm(`Opravdu smazat soubor "${file.name}"?`)) return;
+        const del = await sbClient.storage.from("zakazky").remove([path]);
+        if(del.error){ setUploadStatus("Smazání souboru selhalo: " + del.error.message, "error"); return; }
+        setUploadStatus("Soubor smazán.", "ok");
+        await loadJobUploads();
+      };
+    }
+    box.appendChild(card);
+  }
+}
+
+async function loadJobAccessList(){
+  const box = $("#jobAccessList");
+  if(!box) return;
+  box.innerHTML = "";
+  setAccessStatus("");
+  if(!currentJobDetail?.id || !canEditData()) return;
+  try{
+    const { data, error } = await sbClient.from("objekt_pristupy").select("id,user_id,email,access_role").eq("objekt_id", currentJobDetail.id).order("id", {ascending:false});
+    if(error) throw error;
+    if(!data?.length){
+      box.innerHTML = '<div class="access-card"><div class="small">Zatím nikdo další nemá přístup jen k této zakázce.</div></div>';
+      return;
+    }
+    for(const item of data){
+      let profile = null;
+      if(item.user_id){
+        const profileRes = await sbClient.from("profiles").select("email,full_name,role").eq("id", item.user_id).maybeSingle();
+        profile = profileRes.data || null;
+      }
+      const card = document.createElement("div");
+      card.className = "access-card";
+      const display = profile?.full_name ? `${profile.full_name} • ${profile.email || ''}` : (profile?.email || item.email || item.user_id);
+      card.innerHTML = `
+        <div style="font-weight:800">${display}</div>
+        <div class="small" style="margin-top:4px">Přístup: ${item.access_role || profile?.role || "klient"}</div>
+        <div class="row" style="margin-top:10px">
+          <button class="btn btn-danger btn-small remove-access-btn" type="button">Odebrat</button>
+        </div>`;
+      card.querySelector('.remove-access-btn').onclick = async ()=>{
+        if(!confirm('Odebrat tomuto uživateli přístup k zakázce?')) return;
+        const del = await sbClient.from('objekt_pristupy').delete().eq('id', item.id);
+        if(del.error){ setAccessStatus('Odebrání přístupu selhalo: ' + del.error.message, 'error'); return; }
+        setAccessStatus('Přístup odebrán.', 'ok');
+        await loadJobUploads();
+    await loadJobMaterials();
+    await loadJobAccessList();
+      };
+      box.appendChild(card);
+    }
+  }catch(e){
+    setAccessStatus('Načtení přístupů selhalo: ' + (e.message || e), 'error');
+  }
+}
+async function addJobAccess(){
+  if(!currentJobDetail?.id || !canEditData()) return;
+  const email = $("#jobAccessEmail")?.value.trim().toLowerCase();
+  if(!email){ setAccessStatus('Zadej e-mail uživatele.', 'error'); return; }
+  try{
+    const existing = await sbClient.from('objekt_pristupy').select('id').eq('objekt_id', currentJobDetail.id).eq('email', email).maybeSingle();
+    if(existing.error && existing.error.code !== 'PGRST116') throw existing.error;
+    if(existing.data){
+      setAccessStatus('Tento e-mail už přístup k zakázce má.', 'ok');
+      return;
+    }
+
+    const profileRes = await sbClient.from('profiles').select('id,email').eq('email', email).maybeSingle();
+    if(profileRes.error && profileRes.error.code !== 'PGRST116') throw profileRes.error;
+    const userId = profileRes.data?.id || null;
+
+    const ins = await sbClient.from('objekt_pristupy').insert({
+      objekt_id: currentJobDetail.id,
+      user_id: userId,
+      email,
+      access_role: 'klient'
+    });
+    if(ins.error) throw ins.error;
+    $("#jobAccessEmail").value = '';
+    setAccessStatus('Přístup přidán. Tento e-mail po přihlášení uvidí jen svoji zakázku.', 'ok');
+    await loadJobAccessList();
+  }catch(e){
+    const msg = e?.message || String(e);
+    if(/duplicate|unique/i.test(msg)) setAccessStatus('Tento e-mail už přístup k zakázce má.', 'ok');
+    else setAccessStatus('Přidání přístupu selhalo: ' + msg, 'error');
+  }
+}
+
+async function uploadJobFile(){
+  if(!canManageFiles()) return;
+  const input = $("#jobFileInput");
+  const file = input?.files?.[0];
+  if(!file){ setUploadStatus("Vyber soubor k nahrání.", "error"); return; }
+  if(!currentJobDetail?.id){ setUploadStatus("Nejdřív otevři zakázku.", "error"); return; }
+  const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
+  const path = `${currentJobDetail.id}/${Date.now()}_${safeName}`;
+  setUploadStatus("Nahrávám soubor…");
+  const up = await sbClient.storage.from("zakazky").upload(path, file, { upsert:false });
+  if(up.error){
+    setUploadStatus('Nahrání selhalo: ' + up.error.message + '. V Supabase zkontroluj bucket "zakazky".', "error");
+    return;
+  }
+  input.value = "";
+  setUploadStatus("Soubor nahrán.", "ok");
+  await loadJobUploads();
+}
+
+
+async function loadJobMaterials(){
+  const box = $("#materialsList");
+  const summary = $("#materialsSummary");
+  if(!box) return;
+  box.innerHTML = "";
+  if(summary) summary.textContent = "0 položek";
+  setMaterialsStatus("");
+  if(!currentJobDetail?.id) return;
+  try{
+    let { data, error } = await sbClient
+      .from("objekt_materialy")
+      .select("id,nazev,pouziti,mnozstvi,jednotka,odstin,poznamka,created_at")
+      .eq("objekt_id", currentJobDetail.id)
+      .order("created_at", { ascending:false });
+    if(error && /does not exist/i.test(error.message || "")){
+      schemaHasMaterials = false;
+      box.innerHTML = '<div class="access-card"><div class="small">Tabulka pro barvy a materiál ještě není v databázi. Spusť nový SQL skript.</div></div>';
+      setMaterialsStatus("Barvy a materiál ještě nejsou připravené v databázi.", "error");
+      return;
+    }
+    if(error) throw error;
+    schemaHasMaterials = true;
+    const items = data || [];
+    if(summary) summary.textContent = `${items.length} položek`;
+    if(!items.length){
+      box.innerHTML = '<div class="access-card"><div class="small">Zatím tu není žádná zadaná barva ani materiál.</div></div>';
+      return;
+    }
+    for(const item of items){
+      const card = document.createElement("div");
+      card.className = "access-card";
+      card.innerHTML = `
+        <div style="font-weight:800">${safeText(item.nazev || "Materiál")}</div>
+        <div class="small" style="margin-top:4px">${safeText(item.pouziti || "univerzální")} • ${item.mnozstvi ?? 0} ${safeText(item.jednotka || "")}</div>
+        ${item.odstin ? `<div class="small" style="margin-top:4px">Odstín: ${safeText(item.odstin)}</div>` : ""}
+        ${item.poznamka ? `<div class="small" style="margin-top:4px">${safeText(item.poznamka)}</div>` : ""}
+        ${canEditData() ? '<div class="row" style="margin-top:10px"><button class="btn btn-danger btn-small delete-material-btn" type="button">Smazat</button></div>' : ""}
+      `;
+      if(canEditData()){
+        card.querySelector(".delete-material-btn").onclick = async ()=>{
+          if(!confirm(`Opravdu smazat materiál "${item.nazev}"?`)) return;
+          const del = await sbClient.from("objekt_materialy").delete().eq("id", item.id);
+          if(del.error){ setMaterialsStatus("Smazání materiálu selhalo: " + del.error.message, "error"); return; }
+          setMaterialsStatus("Materiál smazán.", "ok");
+          await loadJobMaterials();
+        };
+      }
+      box.appendChild(card);
+    }
+  }catch(e){
+    setMaterialsStatus("Načtení materiálu selhalo: " + (e.message || e), "error");
+  }
+}
+async function addMaterial(){
+  if(!canEditData() || !currentJobDetail?.id) return;
+  const nazev = ($("#materialName").value || "").trim();
+  const pouziti = $("#materialUse").value;
+  const mnozstvi = Number($("#materialQty").value || 0);
+  const jednotka = $("#materialUnit").value;
+  const odstin = ($("#materialShade").value || "").trim();
+  const poznamka = ($("#materialNote").value || "").trim();
+  if(!nazev){ setMaterialsStatus("Zadej název barvy nebo materiálu.", "error"); return; }
+  try{
+    const { error } = await sbClient.from("objekt_materialy").insert({
+      objekt_id: currentJobDetail.id,
+      nazev,
+      pouziti,
+      mnozstvi,
+      jednotka,
+      odstin,
+      poznamka
+    });
+    if(error) throw error;
+    ["#materialName","#materialQty","#materialShade","#materialNote"].forEach(id => { const el = $(id); if(el) el.value = ""; });
+    $("#materialUse").value = "steny";
+    $("#materialUnit").value = "kg";
+    setMaterialsStatus("Materiál přidán.", "ok");
+    await loadJobMaterials();
+  }catch(e){
+    setMaterialsStatus("Uložení materiálu selhalo: " + (e.message || e), "error");
+  }
+}
+
+async function fetchProfile(userId){
+  const { data, error } = await sbClient.from("profiles").select("*").eq("id", userId).maybeSingle();
+  if(error) throw error;
+  return data;
+}
+function setRoleUI(){
+  const role = currentProfile?.role || "klient";
+  $("#roleChip").textContent = currentProfile?.email ? `Uživatel: ${currentProfile.email}` : "Přihlášeno";
+  $("#roleChip").classList.remove("hidden");
+  $("#detailRoleChip").textContent = currentProfile?.email ? currentProfile.email : "Přihlášeno";
+  $("#logoutBtn").classList.remove("hidden");
+  const isSprava = role === "sprava";
+  const canManageFiles = ["sprava","sefka"].includes(role);
+  $("#jobAccessPanel")?.classList.toggle("hidden", !isSprava);
+  $("#addJobAccessBtn")?.classList.toggle("hidden", !isSprava);
+  $("#spravaAddJob").classList.toggle("hidden", !isSprava);
+  $("#spravaAddFloor").classList.toggle("hidden", !isSprava);
+  $("#addRoomPanel").classList.toggle("hidden", !isSprava);
+  $("#roomEditButtons").classList.toggle("hidden", !isSprava);
+  $("#wipeJobsBtn").classList.toggle("hidden", !isSprava);
+  $("#uploadJobFileBtn")?.classList.toggle("hidden", !canManageFiles);
+  $("#jobMaterialsForm")?.classList.toggle("hidden", !isSprava);
+}
+async function login(){
+  if(!sbClient && !initSupabase()) return;
+  const email = $("#loginEmail").value.trim().toLowerCase();
+  const password = $("#loginPassword").value;
+  if(!email || !password){ setLoginStatus("Vyplň e-mail i heslo.", "error"); return; }
+  setLoginStatus("Zkouším přihlášení…");
+  const { data, error } = await sbClient.auth.signInWithPassword({ email, password });
+  if(error){ setLoginStatus("Chyba přihlášení: " + error.message, "error"); return; }
+  currentSession = data.session;
+  if($("#rememberLogin")?.checked) localStorage.setItem("patronus_remember_login", "1");
+  else localStorage.removeItem("patronus_remember_login");
+  setLoginStatus("Přihlášení proběhlo. Načítám data…", "ok");
+  await afterAuth();
+}
+
+async function sendOtp(){ return; }
+async function verifyOtp(){ return; }
+
+async function logout(){
+  localStorage.removeItem("patronus_remember_login");
+  await sbClient.auth.signOut();
+  currentSession = null;
+  currentProfile = null;
+  currentJobs = [];
+  currentJobDetail = null;
+  currentRoomDetail = null;
+  $("#roleChip").classList.add("hidden");
+  $("#logoutBtn").classList.add("hidden");
+  show("loginView");
+}
+async function afterAuth(){
+  const { data: userData } = await sbClient.auth.getUser();
+  const user = userData.user;
+  if(!user){ show("loginView"); return; }
+
+  let profile = await fetchProfile(user.id);
+  if(!profile){
+    const role = ['r.rosko@patronusservis.cz'].includes((user.email || '').toLowerCase()) ? 'sprava' : 'klient';
+    const { error } = await sbClient.from("profiles").insert({ id:user.id, email:user.email, role, full_name:user.email });
+    if(error && !/duplicate/i.test(error.message || "")){ setLoginStatus("Profil se nepodařilo vytvořit: " + error.message, "error"); return; }
+    profile = await fetchProfile(user.id);
+  }
+  currentProfile = profile || { id:user.id, email:user.email, role:'klient' };
+  setRoleUI();
+  show("jobsView");
+  currentAccessibleJobIds = await loadAccessibleJobIds();
+  await loadJobs();
+}
+
+function roomSelectColumns(withExtended=true){
+  const base = "id,nazev,popis,delka,sirka,vyska,strop,hotovo,checklist(id,nazev,hotovo)";
+  return withExtended ? `${base},kategorie,pocet_zarubni` : base;
+}
+function jobSelectColumns(withExtended=true){
+  return `id,nazev,created_at,patra(id,nazev,mistnosti(${roomSelectColumns(withExtended)}))`;
+}
+async function safeLoadJobsData(){
+  let res = await sbClient.from("objekty").select(jobSelectColumns(true)).order("created_at", { ascending:false });
+  if(res.error && /does not exist/i.test(res.error.message || "")){
+    schemaHasExtendedRoomFields = false;
+    res = await sbClient.from("objekty").select(jobSelectColumns(false)).order("created_at", { ascending:false });
+  } else {
+    schemaHasExtendedRoomFields = true;
+  }
+  if(res.error) throw res.error;
+  return (res.data || []).map(job => ({
+    ...job,
+    patra: (job.patra || []).map(f => ({ ...f, mistnosti: (f.mistnosti || []).map(normalizeRoom) }))
+  }));
+}
+async function loadJobs(){
+  try{
+    setJobsStatus("Načítám zakázky…");
+    currentJobs = await safeLoadJobsData();
+    if(Array.isArray(currentAccessibleJobIds)) currentJobs = currentJobs.filter(job => currentAccessibleJobIds.includes(job.id));
+    renderJobs();
+    setJobsStatus(schemaHasExtendedRoomFields ? "Zakázky načteny." : "Zakázky načteny v kompatibilním režimu.", "ok");
+  }catch(e){
+    setJobsStatus("Načtení zakázek selhalo: " + (e.message || e), "error");
+  }
+}
+function summarizeAllJobs(jobs){
+  let floors = 0, total = 0, done = 0, roomArea = 0, socialArea = 0, corridorArea = 0, frames = 0;
+  for(const job of jobs){
+    floors += (job.patra || []).length;
+    const rooms = [];
+    (job.patra || []).forEach(f => rooms.push(...(f.mistnosti || []).map(normalizeRoom)));
+    const agg = aggregateRooms(rooms);
+    total += agg.total; done += agg.done; roomArea += agg.roomArea; socialArea += agg.socialArea; corridorArea += agg.corridorArea; frames += agg.frames;
+  }
+  $("#sumJobs").textContent = jobs.length;
+  $("#sumFloors").textContent = floors;
+  $("#sumRoomsArea").textContent = fmt(roomArea);
+  $("#sumSocialArea").textContent = fmt(socialArea);
+  $("#sumCorridorArea").textContent = fmt(corridorArea);
+  $("#sumFrames").textContent = fmtInt(frames);
+  $("#sumTotal").textContent = fmt(total);
+  $("#sumDone").textContent = fmt(done);
+}
+function getFilteredJobs(){
+  const q = ($("#jobSearch").value || "").trim().toLowerCase();
+  const sort = $("#jobSort").value;
+  let jobs = [...currentJobs];
+  if(q) jobs = jobs.filter(j => (j.nazev || "").toLowerCase().includes(q));
+  jobs.sort((a,b) => {
+    if(sort === "name") return (a.nazev || "").localeCompare(b.nazev || "", 'cs');
+    if(sort === "progress"){
+      const ra = []; const rb = [];
+      (a.patra || []).forEach(f => ra.push(...(f.mistnosti || [])));
+      (b.patra || []).forEach(f => rb.push(...(f.mistnosti || [])));
+      const pa = aggregateRooms(ra); const pb = aggregateRooms(rb);
+      const p1 = pa.total ? pa.done / pa.total : 0;
+      const p2 = pb.total ? pb.done / pb.total : 0;
+      return p2 - p1;
+    }
+    return new Date(b.created_at || 0) - new Date(a.created_at || 0);
+  });
+  return jobs;
+}
+function renderJobs(){
+  summarizeAllJobs(currentJobs);
+  const box = $("#jobsList");
+  const jobs = getFilteredJobs();
+  box.innerHTML = "";
+  if(!jobs.length){
+    box.innerHTML = `<div class="job"><div class="small">Žádná zakázka neodpovídá filtru.</div></div>`;
+    return;
+  }
+  jobs.forEach(job => {
+    const rooms = [];
+    (job.patra || []).forEach(f => rooms.push(...(f.mistnosti || []).map(normalizeRoom)));
+    const agg = aggregateRooms(rooms);
+    const percent = agg.total ? Math.round((agg.done / agg.total) * 100) : 0;
+    const card = document.createElement("div");
+    card.className = "job";
+    card.innerHTML = `
+      <div class="job-head">
+        <div>
+          <h3>${job.nazev}</h3>
+          <div class="job-topline">${(job.patra || []).length} pater • ${rooms.length} místností • ${fmt(agg.total)} celkem</div>
+        </div>
+        <div class="row">
+          <span class="pill pill-ok">${fmt(agg.done)} hotovo</span>
+          <button class="btn btn-primary btn-small open-job-btn">Otevřít detail</button>
+          ${currentProfile?.role === "sprava" ? '<button class="btn btn-danger btn-small delete-job-btn">Smazat</button>' : ''}
+        </div>
+      </div>
+      <div class="metric-grid">
+        <div class="metric"><div class="k">Pokoje</div><div class="v">${fmt(agg.roomArea)}</div></div>
+        <div class="metric"><div class="k">Sociální zařízení</div><div class="v">${fmt(agg.socialArea)}</div></div>
+        <div class="metric"><div class="k">Chodby</div><div class="v">${fmt(agg.corridorArea)}</div></div>
+        <div class="metric"><div class="k">Zárubně</div><div class="v">${fmtInt(agg.frames)}</div></div>
+        <div class="metric"><div class="k">Hotovo</div><div class="v">${percent} %</div></div>
+      </div>
+      <div class="progress"><span style="width:${percent}%"></span></div>
+    `;
+    card.querySelector(".open-job-btn").onclick = () => openJob(job.id);
+    const deleteJobBtn = card.querySelector(".delete-job-btn");
+    if(deleteJobBtn){
+      deleteJobBtn.onclick = async (e) => {
+        e.stopPropagation();
+        if(!confirm(`Opravdu smazat zakázku "${job.nazev}"?`)) return;
+        try{
+          await deleteJobById(job.id);
+          await loadJobs();
+        }catch(err){
+          alert("Zakázku se nepodařilo smazat: " + (err.message || err));
+        }
+      };
+    }
+    box.appendChild(card);
+  });
+}
+
+async function deleteChecklistForRoom(roomId){
+  const { error } = await sbClient.from("checklist").delete().eq("mistnost_id", roomId);
+  if(error) throw error;
+}
+async function deleteRoomById(roomId){
+  await deleteChecklistForRoom(roomId);
+  const { error } = await sbClient.from("mistnosti").delete().eq("id", roomId);
+  if(error) throw error;
+}
+async function deleteFloorById(floorId){
+  const { data: rooms, error: roomsError } = await sbClient.from("mistnosti").select("id").eq("patro_id", floorId);
+  if(roomsError) throw roomsError;
+  for(const room of (rooms || [])){
+    await deleteRoomById(room.id);
+  }
+  const { error } = await sbClient.from("patra").delete().eq("id", floorId);
+  if(error) throw error;
+}
+async function deleteJobById(jobId){
+  const { data: floors, error: floorsError } = await sbClient.from("patra").select("id").eq("objekt_id", jobId);
+  if(floorsError) throw floorsError;
+  for(const floor of (floors || [])){
+    await deleteFloorById(floor.id);
+  }
+  const { error } = await sbClient.from("objekty").delete().eq("id", jobId);
+  if(error) throw error;
+}
+async function wipeAllJobs(){
+  if((currentProfile?.role || "sprava") !== "sprava") return;
+  if(!confirm("Opravdu smazat všechny zakázky? Tohle nejde vrátit.")) return;
+  try{
+    setJobsStatus("Mažu všechny zakázky…");
+    const { data: jobs, error } = await sbClient.from("objekty").select("id");
+    if(error) throw error;
+    for(const job of (jobs || [])){
+      await deleteJobById(job.id);
+    }
+    currentJobDetail = null;
+    currentRoomDetail = null;
+    await loadJobs();
+    setJobsStatus("Všechny zakázky byly smazány.", "ok");
+  }catch(e){
+    setJobsStatus("Mazání selhalo: " + (e.message || e), "error");
+  }
+}
+async function deleteCurrentJob(){
+  if(!currentJobDetail?.id) return;
+  if(!confirm(`Opravdu smazat zakázku "${currentJobDetail.nazev}"?`)) return;
+  try{
+    await deleteJobById(currentJobDetail.id);
+    currentJobDetail = null;
+    show("jobsView");
+    await loadJobs();
+  }catch(e){
+    alert("Zakázku se nepodařilo smazat: " + (e.message || e));
+  }
+}
+async function deleteCurrentRoom(){
+  if(!currentRoomDetail?.id) return;
+  const roomName = currentRoomDetail.nazev || "místnost";
+  const jobId = currentJobDetail?.id;
+  if(!confirm(`Opravdu smazat "${roomName}"?`)) return;
+  try{
+    await deleteRoomById(currentRoomDetail.id);
+    currentRoomDetail = null;
+    if(jobId){
+      await openJob(jobId);
+    }else{
+      show("jobsView");
+      await loadJobs();
+    }
+  }catch(e){
+    alert("Místnost se nepodařila smazat: " + (e.message || e));
+  }
+}
+async function addJob(){
+  const name = $("#newJobName").value.trim();
+  if(!name) return alert("Zadej název zakázky.");
+  const { error } = await sbClient.from("objekty").insert({ nazev:name });
+  if(error) return alert(error.message);
+  $("#newJobName").value = "";
+  await loadJobs();
+}
+async function safeOpenJob(jobId){
+  let res = await sbClient.from("objekty").select(`id,nazev,patra(id,nazev,mistnosti(${roomSelectColumns(true)}))`).eq("id", jobId).single();
+  if(res.error && /does not exist/i.test(res.error.message || "")){
+    schemaHasExtendedRoomFields = false;
+    res = await sbClient.from("objekty").select(`id,nazev,patra(id,nazev,mistnosti(${roomSelectColumns(false)}))`).eq("id", jobId).single();
+  }
+  if(res.error) throw res.error;
+  return {
+    ...res.data,
+    patra: (res.data.patra || []).map(f => ({ ...f, mistnosti: (f.mistnosti || []).map(normalizeRoom) }))
+  };
+}
+async function openJob(jobId){
+  try{
+    if(clientPinMode) return;
+    if(Array.isArray(currentAccessibleJobIds) && !currentAccessibleJobIds.includes(jobId)){ alert("Na tuto zakázku nemáš přístup."); return; }
+    currentJobDetail = await safeOpenJob(jobId);
+    renderJobDetail();
+    show("detailView");
+    await loadJobUploads();
+    await loadJobMaterials();
+    await loadJobAccessList();
+    await loadJobNotes();
+  }catch(e){
+    alert(e.message || e);
+  }
+}
+function renderJobDetail(){
+  const job = currentJobDetail;
+  const rooms = [];
+  (job.patra || []).forEach(f => rooms.push(...(f.mistnosti || []).map(normalizeRoom)));
+  const agg = aggregateRooms(rooms);
+  const percent = agg.total ? Math.round((agg.done / agg.total) * 100) : 0;
+
+  $("#detailJobTitle").textContent = job.nazev;
+  $("#detailFloorsCount").textContent = (job.patra || []).length;
+  $("#detailRoomsCount").textContent = rooms.length;
+  $("#detailTotal").textContent = fmt(agg.total);
+  $("#detailDone").textContent = fmt(agg.done);
+  $("#detailRoomsArea").textContent = fmt(agg.roomArea);
+  $("#detailSocialArea").textContent = fmt(agg.socialArea);
+  $("#detailCorridorArea").textContent = fmt(agg.corridorArea);
+  $("#detailFrames").textContent = fmtInt(agg.frames);
+  $("#detailPercent").textContent = percent + " %";
+  $("#materialsSummary").textContent = "Načítám…";
+
+  const floorSel = $("#roomFloorSelect");
+  floorSel.innerHTML = (job.patra || []).map(f => `<option value="${f.id}">${f.nazev}</option>`).join("");
+
+  const wrap = $("#floorsWrap");
+  wrap.innerHTML = "";
+  if(!(job.patra || []).length){
+    wrap.innerHTML = `<div class="card"><div class="small">Zakázka zatím nemá žádné patro.</div></div>`;
+    return;
+  }
+
+  expandedFloorIds = expandedFloorIds.size ? new Set(Array.from(expandedFloorIds).filter(id => (job.patra||[]).some(f => f.id === id))) : new Set();
+  for(const floor of job.patra){
+    const floorRooms = (floor.mistnosti || []).map(normalizeRoom);
+    const fAgg = aggregateRooms(floorRooms);
+    const fPct = fAgg.total ? Math.round((fAgg.done / fAgg.total) * 100) : 0;
+    const isOpen = expandedFloorIds.has(floor.id);
+    const floorEl = document.createElement("div");
+    floorEl.className = "floor" + (isOpen ? " open" : "");
+    floorEl.innerHTML = `
+      <div class="between floor-head">
+        <div>
+          <h3 style="margin:0">${floor.nazev}</h3>
+          <div class="small">${floorRooms.length} pokojů • ${fmt(fAgg.total)} celkem • ${fmt(fAgg.done)} hotovo</div>
+        </div>
+        <div class="row">
+          <div class="pill pill-muted">${fPct} %</div>
+          <button class="btn btn-line btn-small toggle-floor-btn" type="button">${isOpen ? 'Skrýt pokoje' : 'Zobrazit pokoje'}</button>
+          ${currentProfile?.role === "sprava" ? '<button class="btn btn-danger btn-small delete-floor-btn" type="button">Smazat patro</button>' : ''}
+        </div>
+      </div>
+      <div class="metric-grid">
+        <div class="metric"><div class="k">Pokoje</div><div class="v">${fmt(fAgg.roomArea)}</div></div>
+        <div class="metric"><div class="k">Sociální</div><div class="v">${fmt(fAgg.socialArea)}</div></div>
+        <div class="metric"><div class="k">Chodby</div><div class="v">${fmt(fAgg.corridorArea)}</div></div>
+        <div class="metric"><div class="k">Zárubně</div><div class="v">${fmtInt(fAgg.frames)}</div></div>
+        <div class="metric"><div class="k">Hotovo</div><div class="v">${fPct} %</div></div>
+      </div>
+      <div class="progress"><span style="width:${fPct}%"></span></div>
+      <div class="floor-body"><div class="room-grid"></div></div>
+    `;
+    floorEl.querySelector('.toggle-floor-btn').onclick = (e)=>{ e.stopPropagation(); expandedFloorIds = new Set(expandedFloorIds.has(floor.id) ? [] : [floor.id]); renderJobDetail(); };
+    floorEl.querySelector('.floor-head').onclick = (e)=>{ if(e.target.closest('button')) return; expandedFloorIds = new Set(expandedFloorIds.has(floor.id) ? [] : [floor.id]); renderJobDetail(); };
+    const deleteFloorBtn = floorEl.querySelector(".delete-floor-btn");
+    if(deleteFloorBtn){
+      deleteFloorBtn.onclick = async (e) => {
+        e.stopPropagation();
+        if(!confirm(`Opravdu smazat patro "${floor.nazev}" včetně místností?`)) return;
+        try{
+          await deleteFloorById(floor.id);
+          await openJob(currentJobDetail.id);
+        }catch(err){
+          alert("Patro se nepodařilo smazat: " + (err.message || err));
+        }
+      };
+    }
+
+    const grid = floorEl.querySelector(".room-grid");
+    floorRooms.forEach(room => {
+      const st = stateFromRoom(room);
+      const card = document.createElement("div");
+      card.className = "room";
+      card.innerHTML = `
+        <div class="between">
+          <div class="room-label">${room.nazev || categoryLabel(room.kategorie)}</div>
+          <span class="badge ${st.cls}">${st.text}</span>
+        </div>
+        <div class="small">${categoryLabel(room.kategorie)} • ${fmt(area(room))}</div>
+        <div class="small">${room.delka} × ${room.sirka} × ${room.vyska}${room.strop ? " • se stropem" : ""}</div>
+        <div class="small">Zárubně: ${fmtInt(room.pocet_zarubni)}</div>
+        ${room.popis ? `<div class="room-note">Info: ${safeText(room.popis)}</div>` : ''}
+        ${currentProfile?.role === "sprava" ? '<div class="row" style="margin-top:10px"><button class="btn btn-danger btn-small room-delete-inline">Smazat pokoj</button></div>' : ''}
+      `;
+      card.onclick = () => openRoom(room.id);
+      const roomDeleteInline = card.querySelector(".room-delete-inline");
+      if(roomDeleteInline){
+        roomDeleteInline.onclick = async (e) => {
+          e.stopPropagation();
+          if(!confirm(`Opravdu smazat "${room.nazev}"?`)) return;
+          try{
+            await deleteRoomById(room.id);
+            await openJob(currentJobDetail.id);
+          }catch(err){
+            alert("Pokoj se nepodařilo smazat: " + (err.message || err));
+          }
+        };
+      }
+      grid.appendChild(card);
+    });
+    wrap.appendChild(floorEl);
+  }
+}
+async function addFloor(){
+  const name = $("#newFloorName").value.trim();
+  if(!name) return alert("Zadej název patra.");
+  const { error } = await sbClient.from("patra").insert({ objekt_id: currentJobDetail.id, nazev:name });
+  if(error) return alert(error.message);
+  $("#newFloorName").value = "";
+  await openJob(currentJobDetail.id);
+}
+async function ensureChecklist(roomId){
+  const { data, error } = await sbClient.from("checklist").select("id").eq("mistnost_id", roomId);
+  if(error) throw error;
+  if(data && data.length) return;
+  const rows = DEFAULT_CHECKLIST.map(n => ({ mistnost_id: roomId, nazev:n, hotovo:false }));
+  const ins = await sbClient.from("checklist").insert(rows);
+  if(ins.error) throw ins.error;
+}
+async function addRoom(){
+  if(addRoomBusy) return;
+  const patro_id = $("#roomFloorSelect").value;
+  const note = $("#roomName").value.trim();
+  const kategorie = $("#roomCategory").value;
+  const pocet_zarubni = Math.max(0, parseInt($("#roomFrames").value || "0", 10));
+  const delka = num($("#roomLength").value);
+  const sirka = num($("#roomWidth").value);
+  const vyska = num($("#roomHeight").value);
+  const strop = $("#roomCeiling").value === "true";
+  const qty = Math.max(1, parseInt($("#roomQty").value || "1", 10));
+  if(!patro_id || !delka || !sirka || !vyska){ setRoomFormStatus("Vyplň patro a všechny rozměry.", "error"); return; }
+
+  addRoomBusy = true;
+  $("#addRoomBtn").disabled = true;
+  setRoomFormStatus("Ukládám pokoj…");
+  try{
+    let startNumber = getNextRoomNumberForFloor(patro_id, kategorie);
+    for(let i=0;i<qty;i++){
+      const roomName = `${getAutoRoomBaseName(kategorie)} ${startNumber + i}`;
+      let payload = { patro_id, nazev:roomName, popis: note || null, delka, sirka, vyska, strop, hotovo:false };
+      if(schemaHasExtendedRoomFields){
+        payload.kategorie = kategorie;
+        payload.pocet_zarubni = pocet_zarubni;
+      }
+      let res = await sbClient.from("mistnosti").insert(payload).select().single();
+      if(res.error && /does not exist/i.test(res.error.message || "")){
+        schemaHasExtendedRoomFields = false;
+        payload = { patro_id, nazev:roomName, popis: note || null, delka, sirka, vyska, strop, hotovo:false };
+        res = await sbClient.from("mistnosti").insert(payload).select().single();
+      }
+      if(res.error) throw res.error;
+      await ensureChecklist(res.data.id);
+    }
+    ["#roomName","#roomLength","#roomWidth","#roomHeight"].forEach(id => { const el=$(id); if(el) el.value = ""; });
+    $("#roomFrames").value = "0";
+    $("#roomQty").value = "1";
+    setRoomFormStatus(qty > 1 ? `Uloženo ${qty} pokojů.` : "Pokoj uložen.", "ok");
+    expandedFloorIds = new Set([patro_id]);
+    await openJob(currentJobDetail.id);
+  }catch(e){
+    setRoomFormStatus("Uložení pokoje selhalo: " + (e.message || e), "error"); console.error(e);
+  }finally{
+    addRoomBusy = false;
+    $("#addRoomBtn").disabled = false;
+  }
+}
+async function safeOpenRoom(roomId){
+  let res = await sbClient.from("mistnosti").select(`id,nazev,popis,delka,sirka,vyska,strop,hotovo,kategorie,pocet_zarubni,patra(id,nazev,objekty(id,nazev)),checklist(id,nazev,hotovo)`).eq("id", roomId).single();
+  if(res.error && /does not exist/i.test(res.error.message || "")){
+    schemaHasExtendedRoomFields = false;
+    res = await sbClient.from("mistnosti").select(`id,nazev,popis,delka,sirka,vyska,strop,hotovo,patra(id,nazev,objekty(id,nazev)),checklist(id,nazev,hotovo)`).eq("id", roomId).single();
+  }
+  if(res.error) throw res.error;
+  return normalizeRoom(res.data);
+}
+async function openRoom(roomId){
+  try{
+    currentRoomDetail = await safeOpenRoom(roomId);
+    renderRoomDetail();
+    show("roomDetailView");
+  }catch(e){
+    alert(e.message || e);
+  }
+}
+function renderRoomDetail(){
+  const room = normalizeRoom(currentRoomDetail);
+  const st = stateFromRoom(room);
+  const pct = Math.round(progressFromChecks(room.checklist || []) * 100);
+  $("#roomTitle").textContent = room.nazev || categoryLabel(room.kategorie);
+  $("#roomMeta").textContent = `${room.patra?.objekty?.nazev || ""} • ${room.patra?.nazev || ""}`;
+  $("#roomArea").textContent = fmt(area(room));
+  $("#roomCategoryLabel").textContent = categoryLabel(room.kategorie);
+  $("#roomFramesLabel").textContent = fmtInt(room.pocet_zarubni);
+  $("#roomCeilingLabel").textContent = room.strop ? "Ano" : "Ne";
+  $("#roomLen").textContent = room.delka;
+  $("#roomWid").textContent = room.sirka;
+  $("#roomHei").textContent = room.vyska;
+  $("#roomProgressPercent").textContent = pct + " %";
+  $("#roomStateText").textContent = st.text;
+  $("#roomNoteBox").textContent = room.popis ? `Info k pokoji: ${room.popis}` : "Bez info k pokoji.";
+  const pill = $("#roomStatePill");
+  pill.textContent = st.text;
+  pill.className = `pill ${st.pill}`;
+
+  const box = $("#checklistWrap");
+  box.innerHTML = "";
+  (room.checklist || []).forEach(item => {
+    const row = document.createElement("label");
+    row.className = "check";
+    row.innerHTML = `
+      <input type="checkbox" ${item.hotovo ? "checked" : ""} />
+      <div>
+        <div style="font-weight:800">${item.nazev}</div>
+        <div class="small">${item.hotovo ? "Hotovo" : "Čeká"}</div>
+      </div>
+    `;
+    const ch = row.querySelector("input");
+    if((currentProfile?.role || "sprava") !== "sprava") ch.disabled = true;
+    ch.onchange = async () => {
+      const { error } = await sbClient.from("checklist").update({ hotovo: ch.checked }).eq("id", item.id);
+      if(error) return alert(error.message);
+      await openRoom(room.id);
+    };
+    box.appendChild(row);
+  });
+}
+async function markRoomDone(){
+  const next = !currentRoomDetail.hotovo;
+  const { error } = await sbClient.from("mistnosti").update({ hotovo: next }).eq("id", currentRoomDetail.id);
+  if(error) return alert(error.message);
+  await openRoom(currentRoomDetail.id);
+}
+async function boot(){
+  setLoginStatus("Spouštím aplikaci…");
+  if(!initSupabase()) return;
+  const remember = localStorage.getItem("patronus_remember_login") === "1";
+  const { data } = await sbClient.auth.getSession();
+  currentSession = data.session;
+  setLoginStatus("Přihlas se nebo zadej PIN.", "ok");
+  if($("#rememberLogin")) $("#rememberLogin").checked = remember;
+  if(currentSession && remember) await afterAuth();
+  else {
+    if(currentSession && !remember) await sbClient.auth.signOut();
+    show("loginView");
+  }
+  sbClient.auth.onAuthStateChange(async (_event, session) => {
+    currentSession = session;
+    if(session && (localStorage.getItem("patronus_remember_login") === "1")) await afterAuth();
+    if(!session) show("loginView");
+  });
+}
+
+
+$("#loginBtn").onclick = login;
+$("#sendOtpBtn").onclick = sendOtp;
+$("#verifyOtpBtn").onclick = verifyOtp;
+$("#logoutBtn").onclick = logout;
+$("#addJobBtn").onclick = addJob;
+$("#refreshJobsBtn").onclick = loadJobs;
+$("#wipeJobsBtn").onclick = wipeAllJobs;
+$("#backBtn").onclick = ()=>{ if(clientPinMode) return; show("jobsView"); };
+$("#backToJobBtn").onclick = async ()=>{ if(clientPinMode){ show("detailView"); return; } await openJob(currentJobDetail.id); };
+$("#addFloorBtn").onclick = addFloor;
+$("#deleteJobBtn").onclick = deleteCurrentJob;
+$("#addRoomBtn").onclick = addRoom;
+$("#markRoomDoneBtn").onclick = markRoomDone;
+$("#deleteRoomBtn").onclick = deleteCurrentRoom;
+$("#uploadJobFileBtn").onclick = uploadJobFile;
+if($("#addJobAccessBtn")) $("#addJobAccessBtn").onclick = addJobAccess;
+$("#addMaterialBtn").onclick = addMaterial;
+if($("#addJobNoteBtn")) $("#addJobNoteBtn").onclick = addJobNote;
+if($("#clientPinBtn")) $("#clientPinBtn").onclick = openJobByPin;
+$("#qtyMinus").onclick = ()=>{ const i=$("#roomQty"); i.value = Math.max(1, parseInt(i.value || "1", 10) - 1); };
+$("#qtyPlus").onclick = ()=>{ const i=$("#roomQty"); i.value = Math.max(1, parseInt(i.value || "1", 10) + 1); };
+$("#jobSearch").addEventListener("input", renderJobs);
+$("#jobSort").addEventListener("change", renderJobs);
+$("#loginEmail").addEventListener("keydown", e => { if(e.key === "Enter") login(); });
+$("#loginPassword").addEventListener("keydown", e => { if(e.key === "Enter") login(); });
+if($("#clientPinInput")) $("#clientPinInput").addEventListener("keydown", e => { if(e.key === "Enter") openJobByPin(); });
+$("#otpEmail").addEventListener("keydown", e => { if(e.key === "Enter") sendOtp(); });
+$("#otpCode").addEventListener("keydown", e => { if(e.key === "Enter") verifyOtp(); });
+
+$("#previewCloseBtn")?.addEventListener("click", closePreviewModal);
+$("#previewModal")?.addEventListener("click", (e)=>{ if(e.target?.id === "previewModal") closePreviewModal(); });
+document.addEventListener("keydown", (e)=>{ if(e.key === "Escape") closePreviewModal(); });
+
+boot();
+</script>
+</body>
+</html>
