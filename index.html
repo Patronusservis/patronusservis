@@ -337,7 +337,7 @@
 
             <div class="field">
               <label>E-mail</label>
-              <input id="loginEmail" type="email" placeholder="např. r.rosko@patronusservis.cz" autocomplete="username" />
+              <input id="loginEmail" type="email" autocomplete="username" />
             </div>
             <div class="field">
               <label>Heslo</label>
@@ -358,7 +358,7 @@
 
             <div class="field">
               <label>E-mail pro zaslání kódu</label>
-              <input id="otpEmail" type="email" placeholder="např. klient@firma.cz" autocomplete="email" />
+              <input id="otpEmail" type="email" autocomplete="email" />
             </div>
 
             <div class="row" style="margin-top:8px">
@@ -540,7 +540,7 @@
               <div class="upload-toolbar">
                 <div class="field" style="margin:0;min-width:220px;flex:1">
                   <label>E-mail uživatele</label>
-                  <input id="jobAccessEmail" type="email" placeholder="e-mail klienta / stavbyvedoucího" />
+                  <input id="jobAccessEmail" type="email" />
                 </div>
                 <button class="btn btn-primary hidden" id="addJobAccessBtn">Přidat přístup k zakázce</button>
               </div>
@@ -676,6 +676,7 @@ let addRoomBusy = false;
 let schemaHasExtendedRoomFields = true;
 let currentAccessibleJobIds = null;
 let schemaHasMaterials = true;
+let clientPinMode = false;
 
 const $ = (s)=>document.querySelector(s);
 const $$ = (s)=>Array.from(document.querySelectorAll(s));
